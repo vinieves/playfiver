@@ -3,10 +3,11 @@
 namespace App\Traits\Gateways;
 
 use App\Models\Deposit;
-use App\Models\Setting;
+use App\Models\Gateway;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 trait VelanaTrait
@@ -19,6 +20,8 @@ trait VelanaTrait
      */
     public function generatePix(Request $request)
     {
+        Log::info('--- Iniciando geração de PIX via Velana ---');
+
         $validator = Validator::make($request->all(), [
             'amount' => 'required|numeric|min:1',
         ]);
@@ -30,8 +33,10 @@ trait VelanaTrait
         $user = auth()->user();
         $gatewaySettings = \App\Models\Gateway::first();
         $secretKey = $gatewaySettings->velana_secret_key ?? null;
+        Log::info('Velana Secret Key encontrada: ' . ($secretKey ? 'Sim' : 'Não'));
 
         if (empty($secretKey)) {
+            Log::error('A Secret Key da Velana não foi configurada.');
             return response()->json(['error' => 'Credenciais da Velana não configuradas.'], 500);
         }
 
@@ -65,25 +70,33 @@ trait VelanaTrait
             ],
         ];
 
+        Log::info('Payload enviado para Velana:', $payload);
+
         $response = Http::withBasicAuth($secretKey, '')
             ->post('https://api.velana.com.br/v1/transactions', $payload);
 
+        Log::info('Resposta da API Velana - Status: ' . $response->status());
+        Log::info('Resposta da API Velana - Corpo: ', $response->json() ?? ['raw_body' => $response->body()]);
+
         if ($response->failed()) {
+            Log::error('Falha na comunicação com a Velana.', ['status' => $response->status(), 'body' => $response->body()]);
             $deposit->update(['status' => 'failed']);
             return response()->json(['error' => 'Falha ao comunicar com o gateway de pagamento.'], 500);
         }
 
         $data = $response->json();
 
-        if (isset($data['pix']['qrCode'])) {
+        if (isset($data['pix']['qrCodeText'])) {
             $deposit->update(['transaction_id' => $data['id']]);
+            Log::info('Sucesso! QR Code da Velana recebido e enviado para o frontend.');
 
             return response()->json([
-                'qr_code' => $data['pix']['qrCode'],
-                'pix_url' => $data['pix']['qrCodeText'],
+                'idTransaction' => $data['id'],
+                'qrcode'        => $data['pix']['qrCodeText'],
             ]);
         }
 
+        Log::error('A resposta da Velana não continha o qrCodeText esperado.', ['response_data' => $data]);
         $deposit->update(['status' => 'failed']);
         return response()->json(['error' => 'Resposta inesperada do gateway de pagamento.'], 500);
     }
@@ -96,15 +109,18 @@ trait VelanaTrait
      */
     public function handleWebhook(Request $request)
     {
+        Log::info('--- Webhook Velana Recebido ---', $request->all());
         $payload = $request->input('data');
 
         if (empty($payload)) {
+            Log::warning('Webhook Velana com payload vazio.');
             return response('Payload vazio.', 400);
         }
 
         if (isset($payload['status']) && $payload['status'] === 'paid') {
             $depositId = $payload['externalRef'] ?? null;
             if (empty($depositId)) {
+                Log::warning('Webhook Velana sem externalRef.', ['payload' => $payload]);
                 return response('externalRef não encontrado.', 400);
             }
 
@@ -113,15 +129,20 @@ trait VelanaTrait
             if ($deposit) {
                 $paidAmount = $payload['amount'] / 100;
                 if ($paidAmount < $deposit->amount) {
+                    Log::warning('Valor pago no webhook da Velana é menor que o valor do depósito.', ['payload' => $payload, 'deposit' => $deposit]);
                     return response('Valor pago é menor que o valor do depósito.', 400);
                 }
 
                 $deposit->update(['status' => 'completed']);
+                Log::info('Depósito via Velana atualizado para completo.', ['deposit_id' => $deposit->id]);
 
                 $user = User::find($deposit->user_id);
                 if ($user && isset($user->wallet)) {
                     $user->wallet->deposit($deposit->amount, ['description' => 'Depósito via Velana PIX. ID: ' . $deposit->id]);
+                    Log::info('Saldo creditado na carteira do usuário.', ['user_id' => $user->id, 'amount' => $deposit->amount]);
                 }
+            } else {
+                 Log::info('Depósito já processado ou não encontrado via Webhook Velana.', ['externalRef' => $depositId]);
             }
         }
 
