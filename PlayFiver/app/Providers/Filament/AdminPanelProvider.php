@@ -53,7 +53,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path(config("filament.base_url"))
+            ->path('admin')
             ->login()
             ->colors([
                 'danger' => Color::Red,
