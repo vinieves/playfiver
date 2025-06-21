@@ -7,6 +7,7 @@ use App\Models\Deposit;
 use App\Traits\Gateways\DigitoPayTrait;
 use App\Traits\Gateways\EzzepayTrait;
 use App\Traits\Gateways\SuitpayTrait;
+use App\Http\Controllers\Gateway\VelanaController;
 use Illuminate\Http\Request;
 
 class DepositController extends Controller
@@ -25,6 +26,8 @@ class DepositController extends Controller
                 return self::requestQrcodeDigito($request);
             case 'ezzepay':
                 return self::requestQrcodeEzze($request);
+            case 'velana':
+                return (new VelanaController())->deposit($request);
         }
     }
 
