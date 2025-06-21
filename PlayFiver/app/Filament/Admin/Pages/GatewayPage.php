@@ -114,6 +114,16 @@ class GatewayPage extends Page
                             ->placeholder('Digite o client secret')
                             ->maxLength(191),
                     ])->columns(3),
+                Section::make('Velana')
+                    ->description(new HtmlString('Ajustes de credenciais para a Velana, Webhook: <b>' . route('velana.webhook') . "</b>"))
+                    ->schema([
+                        TextInput::make('velana_secret_key')
+                            ->label('Secret Key')
+                            ->placeholder('Digite sua Secret Key da Velana')
+                            ->maxLength(191)
+                            ->columnSpanFull()
+                            ->required(),
+                    ]),
             ])
             ->statePath('data');
     }

@@ -34,6 +34,7 @@ include_once(__DIR__ . '/groups/provider/playFiver.php');
 include_once(__DIR__ . '/groups/gateways/suitpay.php');
 include_once(__DIR__ . '/groups/gateways/digitopay.php');
 include_once(__DIR__ . '/groups/gateways/ezzepay.php');
+include_once(__DIR__ . '/groups/gateways/velana.php');
 
 /// SOCIAL
 include_once(__DIR__ . '/groups/auth/social.php');
