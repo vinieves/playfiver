@@ -36,6 +36,6 @@ return [
     */
 
     'default_filesystem_disk' => env('FILAMENT_FILESYSTEM_DISK', 'public'),
-    'path' => env('FILAMENT_PATH', 'admin'),
+    'base_url' => env('FILAMENT_BASE_URL', 'admin'),
 
 ];
