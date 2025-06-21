@@ -300,6 +300,39 @@
                                     ></i>
                                 </div>
                             </li>
+
+                            <li
+                                v-if="setting.velana_is_enable"
+                                @click="setPaymentMethod('pix', 'velana')"
+                                class="flex justify-between px-4 py-3 mb-3 bg-white cursor-pointer dark:bg-gray-900 hover:bg-green-700/20"
+                            >
+                                <div class="flex items-center gap-4">
+                                    <img
+                                        :src="`/assets/images/velana.png`"
+                                        alt="Velana"
+                                        style="
+                                            object-fit: contain;
+                                            width: 100px;
+                                            height: 35px;
+                                            border-radius: 5px;
+                                        "
+                                    />
+                                    <p>Velana</p>
+                                </div>
+                                <div></div>
+                                <div
+                                    class="flex items-center justify-center gap-4 text-gray-500"
+                                >
+                                    <i
+                                        v-if="this.paymentGateway == 'velana'"
+                                        class="ml-2 fa-solid fa-check"
+                                    ></i>
+                                    <i
+                                        v-if="this.paymentGateway != 'velana'"
+                                        class="ml-2 fa-solid fa-chevron-right"
+                                    ></i>
+                                </div>
+                            </li>
                         </div>
 
                         <div class="mt-3">
