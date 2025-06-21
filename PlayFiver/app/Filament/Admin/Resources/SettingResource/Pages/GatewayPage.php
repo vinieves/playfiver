@@ -107,7 +107,8 @@ class GatewayPage extends Page implements HasForms
                             ->options([
                                 'suitpay' => 'Suitpay',
                                 'digitopay' => 'Digitopay',
-                                'ezzepay' => "EzzePay"
+                                'ezzepay' => "EzzePay",
+                                'velana' => 'Velana',
                             ])->columnSpanFull(),
 
                         Toggle::make('suitpay_is_enable')
@@ -116,6 +117,8 @@ class GatewayPage extends Page implements HasForms
                             ->label('DigitoPay'),
                         Toggle::make('ezzepay_is_enable')
                             ->label('EzzePay'),
+                        Toggle::make('velana_is_enable')
+                            ->label('Velana'),
                         Toggle::make('withdrawal_autom')
                             ->label("Saque automático"),
                         TextInput::make('limit_withdrawal')

@@ -28,7 +28,8 @@ trait VelanaTrait
         }
 
         $user = auth()->user();
-        $secretKey = Setting::where('name', 'velana_secret_key')->first()?->value;
+        $gatewaySettings = \App\Models\Gateway::first();
+        $secretKey = $gatewaySettings->velana_secret_key ?? null;
 
         if (empty($secretKey)) {
             return response()->json(['error' => 'Credenciais da Velana não configuradas.'], 500);
